@@ -14,9 +14,9 @@ NB This package is still under development and will probably change significantl
 
 ## Basic usage
 
-First make an array of `Gene's from your data:
+First make an array of `Gene`s from your data:
 
-`genes = get_genes(path_to_data_file)'
+`genes = get_genes(path_to_data_file)`
 
 Currently the package assumes the file is of the format:
 line 1: headers (these are discarded for now)
@@ -24,6 +24,6 @@ other lines: GeneName value1 value2 value3 ...
 
 Then get a network analysis:
 
-`network_analysis = NetworkAnalysis(PIDCNetworkAnalysis(), genes)'
+`network_analysis = NetworkAnalysis(PIDCNetworkAnalysis(), genes)`
 
-A `NetworkAnalysis' has an array of genes and an array of edges (sorted in descending order of confidence).
+A `NetworkAnalysis` has an array of genes and an array of edges (sorted in descending order of confidence).
