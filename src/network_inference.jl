@@ -41,7 +41,6 @@ function NetworkAnalysis(::MINetworkInference, genes::Array{Gene})
 
      increment_mi(i, j, mi) #output of MI is just a number
  end
-end
 
 function populate_edges_and_confidences(i, j, index)
         mi_score = mi_scores[i, j]
