@@ -36,10 +36,10 @@ function NetworkAnalysis(::MINetworkInference, genes::Array{Gene})
      return mi_scores
  end
 
- function get_mi_and_increment_mi_scores(i, j, k)
+ function get_mi_and_increment_mi_scores(i, j)
      mi = get_mi(genes[i], genes[j])
 
-     increment_mi(i, j, mi) #output of MI is just a number
+     increment_mi_scores(i, j, mi) #output of MI is just a number
  end
 
 function populate_edges_and_confidences(i, j, index)
@@ -85,7 +85,7 @@ end
 
 
 function NetworkAnalysis(::PIDCNetworkInference, genes::Array{Gene})
-    
+
     function get_pid(gene1, gene2, gene3)
         frequencies = get_frequencies_from_bin_ids(
             gene1.discretized_values,
