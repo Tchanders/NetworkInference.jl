@@ -6,6 +6,85 @@ immutable MINetworkInference <: AbstractNetworkInference end
 
 # TODO: allow choose estimator
 # TODO: allow choose distribution
+
+
+function NetworkAnalysis(::MINetworkInference, genes::Array{Gene})
+
+ function get_mi(gene1, gene2)
+   frequencies = get_frequencies_from_bin_ids(
+       gene1.discretized_values,
+       gene2.discretized_values,
+       gene1.number_of_bins,
+       gene2.number_of_bins,
+   )
+   probabilities = get_probabilities("maximum_likelihood", frequencies)
+   mi = get_mutual_information(
+     probabilities,
+     base = 2,
+     probabilities = true,
+     estimator = "maximum_likelihood" #temporary, in future allow choice
+   )
+   return mi
+ end
+
+ function increment_mi_scores(gene_index_1, gene_index_2, unique)
+     mi_score = unique
+     mi_score = isnan(mi_score) ? 0 : mi_score
+     mi_scores[gene_index_1, gene_index_2] += mi_score
+     mi_scores[gene_index_2, gene_index_1] += mi_score
+
+     return mi_scores
+ end
+
+ function get_mi_and_increment_mi_scores(i, j, k)
+     mi = get_mi(genes[i], genes[j])
+
+     increment_mi(i, j, mi) #output of MI is just a number
+ end
+end
+
+function populate_edges_and_confidences(i, j, index)
+        mi_score = mi_scores[i, j]
+         # Ignore self-interaction zeros
+
+       edges[index] = Edge(
+           Set([genes[i], genes[j]]),
+           mi_score
+         )
+       confidences[index] = mi_score
+end
+
+ number_of_genes = length(genes)
+ mi_scores = zeros(number_of_genes, number_of_genes)
+ edges = Array{Edge}(binomial(number_of_genes, 2))
+ confidences = zeros(length(edges))
+
+ # Get MI scores
+ for i in 1 : number_of_genes
+     println(i)
+     for j in i+1 : number_of_genes #select a gene which has not been selected before
+          get_mi_and_increment_mi_scores(i, j)
+     end
+ end
+
+ # Get edges
+ index = 0
+ for i in 1 : number_of_genes
+     for j in i+1 : number_of_genes
+         index += 1
+         populate_edges_and_confidences(i, j, index)
+     end
+ end
+
+ # Sort edges by confidence
+ indices = sortperm(confidences, rev = true)
+ edges = edges[indices]
+
+ return NetworkAnalysis(genes, edges)
+
+end
+
+
 function NetworkAnalysis(::PIDCNetworkInference, genes::Array{Gene})
     
     function get_pid(gene1, gene2, gene3)
