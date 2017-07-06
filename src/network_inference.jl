@@ -1,4 +1,4 @@
-abstract AbstractNetworkInference
+abstract type AbstractNetworkInference end
 
 immutable PIDNetworkInference <: AbstractNetworkInference end
 immutable PIDCNetworkInference <: AbstractNetworkInference end
