@@ -13,9 +13,10 @@ export
     write_network_file,
     # Network inference algorithms
     AbstractNetworkInference,
-    PIDNetworkInference,
-    PIDCNetworkInference,
-    MINetworkInference
+    MINetworkInference,
+    CLRNetworkInference,
+    PUCNetworkInference,
+    PIDCNetworkInference
 
 include("common.jl")
 include("network_inference.jl")

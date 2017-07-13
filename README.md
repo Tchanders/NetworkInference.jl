@@ -6,7 +6,7 @@
 
 [![codecov.io](http://codecov.io/github/Tchanders/NetworkInference.jl/coverage.svg?branch=master)](http://codecov.io/github/Tchanders/NetworkInference.jl?branch=master)
 
-NB This package is still under development and will probably change significantly. Only two network inference algorithms are currently implemented (MI and PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
+NB This package is still under development and will probably change significantly. Four network inference algorithms are currently implemented (MI, CLR, PUC and PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
 
 ## Installation
 

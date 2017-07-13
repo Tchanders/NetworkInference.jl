@@ -6,10 +6,10 @@ immutable Gene
 end
 
 # Make a Gene from a data file line
-# TODO: allow choose discretizer
+# TODO: allow choose discretizer?
 function Gene(line::AbstractArray)
 
-    name = String(line[1])
+    name = string(line[1])
     expression_values = Array{Float64}(line[2:end])
     discretized_values = zeros(Int, length(expression_values))
     number_of_bins = get_bin_ids!(expression_values, "bayesian_blocks", 10, discretized_values)
@@ -20,27 +20,28 @@ function Gene(line::AbstractArray)
 end
 
 immutable GenePair
-    mi::Float64
-    specific_information::Array{Float64}
+    mi::Float64 # Mutual information
+    si::Array{Float64} # Specific information
 end
 
-# TODO: Think about directedness; Set assumes the edge is undirected
+# Networks are assumed to be undirected for now: order of the genes is meaningless
 immutable Edge
-    genes::Set{Gene}
+    genes::Array{Gene}
     confidence::Float64
 end
 
 immutable Network
-    edges::Set{Edge}
-    genes::Set{Gene}
+    genes::Array{Gene}
+    edges::Array{Edge}
 end
 
 immutable NetworkAnalysis
     genes::Array{Gene}
-    edges_by_confidence::Array{Edge} # Edges in descending order of confidence
+    edges::Array{Edge} # Edges in descending order of confidence
 end
 
-# TODO: Different discretization and estimation options
+# TODO: Allow choose discretizer?
+# TODO: Allow choose estimator?
 function get_genes(data_file_path::String)
 
     lines = readdlm(open(data_file_path), skipstart = 1) # Assumes the first line is headers
@@ -55,12 +56,12 @@ function get_genes(data_file_path::String)
 
 end
 
-# TODO: This assumes the edges are undirected
+# Networks are assumed to be undirected for now: edges are written in both directions with the same confidence
 function write_network_file(file_name::String, network_analysis::NetworkAnalysis)
 
     out_file = open(file_name, "w")
 
-    for edge in network_analysis.edges_by_confidence
+    for edge in network_analysis.edges
         genes = collect(edge.genes)
         write(out_file, string(
             genes[1].name, "\t", genes[2].name, "\t",
