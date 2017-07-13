@@ -7,7 +7,7 @@ end
 
 # Make a Gene from a data file line
 # TODO: allow choose discretizer
-function Gene(line::Array{Any, 2})
+function Gene(line::AbstractArray)
 
     name = String(line[1])
     expression_values = Array{Float64}(line[2:end])

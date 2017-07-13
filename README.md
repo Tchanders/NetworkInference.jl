@@ -6,7 +6,7 @@
 
 [![codecov.io](http://codecov.io/github/Tchanders/NetworkInference.jl/coverage.svg?branch=master)](http://codecov.io/github/Tchanders/NetworkInference.jl?branch=master)
 
-NB This package is still under development and will probably change significantly. Only one network inference algorithm is currently implemented (PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
+NB This package is still under development and will probably change significantly. Only two network inference algorithms are currently implemented (MI and PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
 
 ## Installation
 
@@ -24,6 +24,6 @@ other lines: GeneName value1 value2 value3 ...
 
 Then get a network analysis:
 
-`network_analysis = NetworkAnalysis(PIDCNetworkAnalysis(), genes)`
+`network_analysis = NetworkAnalysis(PIDCNetworkInference(), genes)`
 
 A `NetworkAnalysis` has an array of genes and an array of edges (sorted in descending order of confidence).
