@@ -88,7 +88,7 @@ function NetworkAnalysis(::PIDCNetworkInference, genes::Array{Gene}; print_statu
 
     function increment_puc_scores(gene_index_1, gene_index_2, mi, redundancy)
         unique = mi - redundancy
-        puc_score = unique / (unique + redundancy)
+        puc_score = unique / mi
         puc_score = isfinite(puc_score) ? puc_score : zero(puc_score)
         puc_scores[gene_index_1, gene_index_2] += puc_score
         puc_scores[gene_index_2, gene_index_1] += puc_score
