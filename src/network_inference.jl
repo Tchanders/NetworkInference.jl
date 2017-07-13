@@ -1,172 +1,181 @@
 abstract type AbstractNetworkInference end
 
-immutable PIDNetworkInference <: AbstractNetworkInference end
-immutable PIDCNetworkInference <: AbstractNetworkInference end
 immutable MINetworkInference <: AbstractNetworkInference end
+immutable CLRNetworkInference <: AbstractNetworkInference end
+immutable PUCNetworkInference <: AbstractNetworkInference end
+immutable PIDCNetworkInference <: AbstractNetworkInference end
 
-function NetworkAnalysis(::MINetworkInference, genes::Array{Gene}; print_status = false)
+# Context trait
+apply_context(::MINetworkInference) = false
+apply_context(::CLRNetworkInference) = true
+apply_context(::PUCNetworkInference) = false
+apply_context(::PIDCNetworkInference) = true
 
-    function get_mi_scores(i, j)
-        gene1 = genes[i]
-        gene2 = genes[j]
-        frequencies = get_frequencies_from_bin_ids(
-            gene1.discretized_values,
-            gene2.discretized_values,
-            gene1.number_of_bins,
-            gene2.number_of_bins,
-        )
-        probabilities = get_probabilities("maximum_likelihood", frequencies)
-        probabilities_1 = sum(probabilities, 2)
-        probabilities_2 = sum(probabilities, 1)
-        mi = apply_mutual_information_formula(probabilities, probabilities_1, probabilities_2, b)
-        mi_scores[i, j] += mi
-        mi_scores[j, i] += mi
-    end
+# PUC trait
+get_puc(::MINetworkInference) = false
+get_puc(::CLRNetworkInference) = false
+get_puc(::PUCNetworkInference) = true
+get_puc(::PIDCNetworkInference) = true
 
-    function populate_edges(i, j, index)
-        mi_score = mi_scores[i, j]
-        edges[index] = Edge(
-            Set([genes[i], genes[j]]),
-            mi_score
-        )
-        confidences[index] = mi_score
-    end
+# For sorting the edges
+get_confidence(edge::Edge) = edge.confidence
 
-    number_of_genes = length(genes)
+function get_joint_probabilities(gene1, gene2)
+    frequencies = get_frequencies_from_bin_ids(
+        gene1.discretized_values,
+        gene2.discretized_values,
+        gene1.number_of_bins,
+        gene2.number_of_bins
+    )
+    probabilities = get_probabilities("maximum_likelihood", frequencies)
+    # probabilities is already property of a gene, but doing this gets correct array shapes
+    probabilities1 = sum(probabilities, 2)
+    probabilities2 = sum(probabilities, 1)
+    return (probabilities, probabilities1, probabilities2)
+end
+
+# Mutual information
+function get_mi(gene1, gene2, base)
+    probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
+    return apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
+end
+
+# Mutual information and specific information
+function get_mi_and_si(gene1, gene2, base)
+    probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
+    mi = apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
+    si1 = apply_specific_information_formula(probabilities, probabilities1, probabilities2, 1, base)
+    si2 = apply_specific_information_formula(probabilities, probabilities2, probabilities1, 2, base)
+    return (mi, si1, si2)
+end
+
+function get_mi_scores(genes, number_of_genes, base)
+
     mi_scores = zeros(number_of_genes, number_of_genes)
-    edges = Array{Edge}(binomial(number_of_genes, 2))
-    confidences = zeros(length(edges))
-    b = 2
-
-    # Get MI scores
     for i in 1 : number_of_genes
-        if print_status
-            println(i)
-        end
+        gene1 = genes[i]
         for j in i+1 : number_of_genes
-            get_mi_scores(i, j)
+            gene2 = genes[j]
+            mi = get_mi(gene1, gene2, base)
+            mi_scores[i, j] = mi
+            mi_scores[j, i] = mi
         end
     end
-
-    # Get edges
-    index = 0
-    for i in 1 : number_of_genes
-        for j in i+1 : number_of_genes
-            index += 1
-            populate_edges(i, j, index)
-        end
-    end
-
-    # Sort edges by confidence
-    indices = sortperm(confidences, rev = true)
-    edges = edges[indices]
-
-    return NetworkAnalysis(genes, edges)
+    return mi_scores
 
 end
 
-# TODO: allow choose estimator
-# TODO: allow choose distribution
-function NetworkAnalysis(::PIDCNetworkInference, genes::Array{Gene}; print_status = false)
+function get_puc_scores(genes, number_of_genes, base)
 
-    function populate_gene_pairs(i, j)
-        gene1 = genes[i]
-        gene2 = genes[j]
-        frequencies = get_frequencies_from_bin_ids(
-            gene1.discretized_values,
-            gene2.discretized_values,
-            gene1.number_of_bins,
-            gene2.number_of_bins
-        )
-        probabilities = get_probabilities("maximum_likelihood", frequencies)
-        probabilities_1 = sum(probabilities, 2)
-        probabilities_2 = sum(probabilities, 1)
-        mi = apply_mutual_information_formula(probabilities, probabilities_1, probabilities_2, b)
-        gene_pairs[i, j] = GenePair(mi, apply_specific_information_formula(probabilities, probabilities_1, probabilities_2, 1, b))
-        gene_pairs[j, i] = GenePair(mi, apply_specific_information_formula(probabilities, probabilities_2, probabilities_1, 2, b))
-    end
-
-    function increment_puc_scores(gene_index_1, gene_index_2, mi, redundancy)
-        unique = mi - redundancy
-        puc_score = unique / mi
+    function increment_puc_scores(x, z, mi, redundancy)
+        puc_score = (mi - redundancy) / mi
         puc_score = isfinite(puc_score) ? puc_score : zero(puc_score)
-        puc_scores[gene_index_1, gene_index_2] += puc_score
-        puc_scores[gene_index_2, gene_index_1] += puc_score
+        puc_scores[x, z] += puc_score
+        puc_scores[z, x] += puc_score
     end
-
-    function get_pid_and_increment_puc_scores(i, j, k)
-        redundancy_target_k = apply_redundancy_formula(genes[k].probabilities, gene_pairs[i, k].specific_information, gene_pairs[j, k].specific_information, b)
-        redundancy_target_j = apply_redundancy_formula(genes[j].probabilities, gene_pairs[i, j].specific_information, gene_pairs[k, j].specific_information, b)
-        redundancy_target_i = apply_redundancy_formula(genes[i].probabilities, gene_pairs[j, i].specific_information, gene_pairs[k, i].specific_information, b)
-
-        increment_puc_scores(i, k, gene_pairs[i, k].mi, redundancy_target_k)
-        increment_puc_scores(j, k, gene_pairs[j, k].mi, redundancy_target_k)
-
-        increment_puc_scores(i, j, gene_pairs[i, j].mi, redundancy_target_j)
-        increment_puc_scores(k, j, gene_pairs[k, j].mi, redundancy_target_j)
-
-        increment_puc_scores(j, i, gene_pairs[j, i].mi, redundancy_target_i)
-        increment_puc_scores(k, i, gene_pairs[k, i].mi, redundancy_target_i)
-    end
-
-    function populate_edges_and_confidences(i, j, index)
-        puc_score = puc_scores[i, j]
-        # Ignore self-interaction zeros
-        puc_scores_i = vcat(puc_scores[1:i-1, i], puc_scores[i+1:end, i])
-        puc_scores_j = vcat(puc_scores[1:j-1, j], puc_scores[j+1:end, j])
-
-        confidence = puc_score
-        confidence =
-            cdf(fit(Gamma, puc_scores_i), puc_score) +
-            cdf(fit(Gamma, puc_scores_j), puc_score)
-        edges[index] = Edge(
-            Set([genes[i], genes[j]]),
-            confidence
+    function get_puc(x, y, z)
+        redundancy = apply_redundancy_formula(
+            genes[z].probabilities,
+            gene_pairs[x, z].si,
+            gene_pairs[y, z].si,
+            base
         )
-        confidences[index] = confidence
+        increment_puc_scores(x, z, gene_pairs[x, z].mi, redundancy)
+        increment_puc_scores(y, z, gene_pairs[y, z].mi, redundancy)
     end
-
-    b = 2
-    number_of_genes = length(genes)
-    puc_scores = zeros(number_of_genes, number_of_genes)
-    edges = Array{Edge}(binomial(number_of_genes, 2))
-    confidences = zeros(length(edges))
 
     gene_pairs = Array{GenePair}(number_of_genes, number_of_genes)
-
-    # Actions between pairs:
-    # Make GenePairs and calculate MI and specific information between each pair 
+    puc_scores = zeros(number_of_genes, number_of_genes)
     for i in 1 : number_of_genes
+        gene1 = genes[i]
         for j in i+1 : number_of_genes
-            populate_gene_pairs(i, j)
+            gene2 = genes[j]
+            mi, si1, si2 = get_mi_and_si(gene1, gene2, base)
+            gene_pairs[i, j] = GenePair(mi, si1)
+            gene_pairs[j, i] = GenePair(mi, si2)
         end
     end
-
-    # Actions between triples:
-    # Get redundancy between each triple, and store PUC score for each gene
     for i in 1 : number_of_genes
-        if print_status
-            println(i)
-        end
         for j in i+1 : number_of_genes
             for k in j+1 : number_of_genes
-                get_pid_and_increment_puc_scores(i, j, k)
+                get_puc(i, j, k)
+                get_puc(i, k, j)
+                get_puc(j, k, i)
             end
         end
     end
+    return puc_scores
 
-    # Calculate confidences and get the edges
-    index = 0
+end
+
+# In their respective original implementations, CLR and PIDC applied network context in slightly
+# different ways. Those differences are respected here; in informal tests, they have not been
+# found to make much of a difference.
+function get_confidence(::PIDCNetworkInference, i, j, scores, confidences)
+    score = scores[i, j]
+    scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
+    scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
+    confidences[i, j] = cdf(fit(Gamma, scores_i), score) + cdf(fit(Gamma, scores_j), score)
+end
+function get_confidence(::CLRNetworkInference, i, j, scores, confidences)
+    score = scores[i, j]
+    scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
+    scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
+    confidences[i, j] = sqrt(
+        (score - mean(scores_i))^2 / var(scores_i) +
+        (score - mean(scores_j))^2 / var(scores_j)
+    )
+end
+
+function get_confidences(inference, scores, number_of_genes)
+
+    confidences = zeros(number_of_genes, number_of_genes)
     for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
-            index += 1
-            populate_edges_and_confidences(i, j, index)
+            get_confidence(inference, i, j, scores, confidences)
         end
     end
+    return confidences
 
-    # Sort edges by confidence
-    indices = sortperm(confidences, rev = true)
-    edges = edges[indices]
+end
+
+# TODO: allow choose estimator?
+# TODO: allow choose distribution?
+function NetworkAnalysis(inference::AbstractNetworkInference, genes::Array{Gene}; print_status = false)
+
+    # Constants and containers
+    base = 2
+    number_of_genes = length(genes)
+    edges = Array{Edge}(binomial(number_of_genes, 2))
+
+    # Get the raw scores
+    if get_puc(inference)
+        scores = get_puc_scores(genes, number_of_genes, base)
+    else
+        scores = get_mi_scores(genes, number_of_genes, base)
+    end
+
+    # Apply context if necessary
+    if apply_context(inference)
+        confidences = get_confidences(inference, scores, number_of_genes)
+    else
+        confidences = scores
+    end
+
+    # Get edges from scores
+    index = 0
+    for i in 1 : number_of_genes
+        gene1 = genes[i]
+        for j in i+1 : number_of_genes
+            index += 1
+            gene2 = genes[j]
+            edges[index] = Edge(
+                [gene1, gene2],
+                confidences[i, j]
+            )
+        end
+    end
+    sort!(edges; by = get_confidence, rev = true)
 
     return NetworkAnalysis(genes, edges)
 
