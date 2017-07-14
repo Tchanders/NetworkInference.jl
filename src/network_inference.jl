@@ -34,31 +34,19 @@ function get_joint_probabilities(gene1, gene2)
     return (probabilities, probabilities1, probabilities2)
 end
 
-# Mutual information
-function get_mi(gene1, gene2, base)
-    probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
-    return apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
-end
-
-# Mutual information and specific information
-function get_mi_and_si(gene1, gene2, base)
-    probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
-    mi = apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
-    si1 = apply_specific_information_formula(probabilities, probabilities1, probabilities2, 1, base)
-    si2 = apply_specific_information_formula(probabilities, probabilities2, probabilities1, 2, base)
-    return (mi, si1, si2)
-end
-
 function get_mi_scores(genes, number_of_genes, base)
 
-    mi_scores = zeros(number_of_genes, number_of_genes)
-    for i in 1 : number_of_genes
-        gene1 = genes[i]
+    function get_mi(gene1, gene2, i, j, base) # Mutual information
+        probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
+        mi = apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
+        mi_scores[i, j] = mi
+        mi_scores[j, i] = mi
+    end
+
+    mi_scores = SharedArray{Float64}(number_of_genes, number_of_genes)
+    @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
-            gene2 = genes[j]
-            mi = get_mi(gene1, gene2, base)
-            mi_scores[i, j] = mi
-            mi_scores[j, i] = mi
+            get_mi(genes[i], genes[j], i, j, base)
         end
     end
     return mi_scores
@@ -67,40 +55,51 @@ end
 
 function get_puc_scores(genes, number_of_genes, base)
 
+    function get_mi_and_si(gene1, gene2, base) # Mutual information and specific information
+        probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
+        mi = apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
+        si1 = apply_specific_information_formula(probabilities, probabilities1, probabilities2, 1, base)
+        si2 = apply_specific_information_formula(probabilities, probabilities2, probabilities1, 2, base)
+        return (mi, si1, si2)
+    end
+
+    function get_gene_pairs(gene1, gene2, i, j, base)
+        mi, si1, si2 = get_mi_and_si(gene1, gene2, base)
+        gene_pairs[i, j] = GenePair(mi, si1)
+        gene_pairs[j, i] = GenePair(mi, si2)
+    end
+
     function increment_puc_scores(x, z, mi, redundancy)
         puc_score = (mi - redundancy) / mi
         puc_score = isfinite(puc_score) ? puc_score : zero(puc_score)
         puc_scores[x, z] += puc_score
         puc_scores[z, x] += puc_score
     end
-    function get_puc(x, y, z)
+
+    function get_puc(target, source1_target, source2_target, x, y, z)
         redundancy = apply_redundancy_formula(
-            genes[z].probabilities,
-            gene_pairs[x, z].si,
-            gene_pairs[y, z].si,
+            target.probabilities,
+            source1_target.si,
+            source2_target.si,
             base
         )
-        increment_puc_scores(x, z, gene_pairs[x, z].mi, redundancy)
-        increment_puc_scores(y, z, gene_pairs[y, z].mi, redundancy)
+        increment_puc_scores(x, z, source1_target.mi, redundancy)
+        increment_puc_scores(y, z, source2_target.mi, redundancy)
     end
 
     gene_pairs = Array{GenePair}(number_of_genes, number_of_genes)
-    puc_scores = zeros(number_of_genes, number_of_genes)
+    puc_scores = SharedArray{Float64}(number_of_genes, number_of_genes)
     for i in 1 : number_of_genes
-        gene1 = genes[i]
         for j in i+1 : number_of_genes
-            gene2 = genes[j]
-            mi, si1, si2 = get_mi_and_si(gene1, gene2, base)
-            gene_pairs[i, j] = GenePair(mi, si1)
-            gene_pairs[j, i] = GenePair(mi, si2)
+            get_gene_pairs(genes[i], genes[j], i, j, base)
         end
     end
-    for i in 1 : number_of_genes
+    @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             for k in j+1 : number_of_genes
-                get_puc(i, j, k)
-                get_puc(i, k, j)
-                get_puc(j, k, i)
+                get_puc(genes[k], gene_pairs[i, k], gene_pairs[j, k], i, j, k)
+                get_puc(genes[j], gene_pairs[i, j], gene_pairs[k, j], i, k, j)
+                get_puc(genes[i], gene_pairs[j, i], gene_pairs[k, i], j, k, i)
             end
         end
     end
@@ -108,29 +107,29 @@ function get_puc_scores(genes, number_of_genes, base)
 
 end
 
-# In their respective original implementations, CLR and PIDC applied network context in slightly
-# different ways. Those differences are respected here; in informal tests, they have not been
-# found to make much of a difference.
-function get_confidence(::PIDCNetworkInference, i, j, scores, confidences)
-    score = scores[i, j]
-    scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
-    scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
-    confidences[i, j] = cdf(fit(Gamma, scores_i), score) + cdf(fit(Gamma, scores_j), score)
-end
-function get_confidence(::CLRNetworkInference, i, j, scores, confidences)
-    score = scores[i, j]
-    scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
-    scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
-    confidences[i, j] = sqrt(
-        (score - mean(scores_i))^2 / var(scores_i) +
-        (score - mean(scores_j))^2 / var(scores_j)
-    )
-end
-
 function get_confidences(inference, scores, number_of_genes)
 
-    confidences = zeros(number_of_genes, number_of_genes)
-    for i in 1 : number_of_genes
+    # In their respective original implementations, CLR and PIDC applied network context in slightly
+    # different ways. Those differences are respected here; in informal tests, they have not been
+    # found to make much of a difference.
+    function get_confidence(::PIDCNetworkInference, i, j, scores, confidences)
+        score = scores[i, j]
+        scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
+        scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
+        confidences[i, j] = cdf(fit(Gamma, scores_i), score) + cdf(fit(Gamma, scores_j), score)
+    end
+    function get_confidence(::CLRNetworkInference, i, j, scores, confidences)
+        score = scores[i, j]
+        scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
+        scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
+        confidences[i, j] = sqrt(
+            (score - mean(scores_i))^2 / var(scores_i) +
+            (score - mean(scores_j))^2 / var(scores_j)
+        )
+    end
+
+    confidences = SharedArray{Float64}(number_of_genes, number_of_genes)
+    @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             get_confidence(inference, i, j, scores, confidences)
         end
