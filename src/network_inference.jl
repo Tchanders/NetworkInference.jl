@@ -36,7 +36,7 @@ end
 
 function get_mi_scores(genes, number_of_genes, base)
 
-    function get_mi(gene1, gene2, i, j, base) # Mutual information
+    function get_mi(gene1, gene2, i, j, base, mi_scores)
         probabilities, probabilities1, probabilities2 = get_joint_probabilities(gene1, gene2)
         mi = apply_mutual_information_formula(probabilities, probabilities1, probabilities2, base)
         mi_scores[i, j] = mi
@@ -46,7 +46,7 @@ function get_mi_scores(genes, number_of_genes, base)
     mi_scores = SharedArray{Float64}(number_of_genes, number_of_genes)
     @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
-            get_mi(genes[i], genes[j], i, j, base)
+            get_mi(genes[i], genes[j], i, j, base, mi_scores)
         end
     end
     return mi_scores
@@ -69,22 +69,22 @@ function get_puc_scores(genes, number_of_genes, base)
         gene_pairs[j, i] = GenePair(mi, si2)
     end
 
-    function increment_puc_scores(x, z, mi, redundancy)
+    function increment_puc_scores(x, z, mi, redundancy, puc_scores)
         puc_score = (mi - redundancy) / mi
         puc_score = isfinite(puc_score) ? puc_score : zero(puc_score)
         puc_scores[x, z] += puc_score
         puc_scores[z, x] += puc_score
     end
 
-    function get_puc(target, source1_target, source2_target, x, y, z)
+    function get_puc(target, source1_target, source2_target, x, y, z, puc_scores)
         redundancy = apply_redundancy_formula(
             target.probabilities,
             source1_target.si,
             source2_target.si,
             base
         )
-        increment_puc_scores(x, z, source1_target.mi, redundancy)
-        increment_puc_scores(y, z, source2_target.mi, redundancy)
+        increment_puc_scores(x, z, source1_target.mi, redundancy, puc_scores)
+        increment_puc_scores(y, z, source2_target.mi, redundancy, puc_scores)
     end
 
     gene_pairs = Array{GenePair}(number_of_genes, number_of_genes)
@@ -97,9 +97,9 @@ function get_puc_scores(genes, number_of_genes, base)
     @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             for k in j+1 : number_of_genes
-                get_puc(genes[k], gene_pairs[i, k], gene_pairs[j, k], i, j, k)
-                get_puc(genes[j], gene_pairs[i, j], gene_pairs[k, j], i, k, j)
-                get_puc(genes[i], gene_pairs[j, i], gene_pairs[k, i], j, k, i)
+                get_puc(genes[k], gene_pairs[i, k], gene_pairs[j, k], i, j, k, puc_scores)
+                get_puc(genes[j], gene_pairs[i, j], gene_pairs[k, j], i, k, j, puc_scores)
+                get_puc(genes[i], gene_pairs[j, i], gene_pairs[k, i], j, k, i, puc_scores)
             end
         end
     end
