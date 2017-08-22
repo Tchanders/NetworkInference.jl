@@ -26,12 +26,12 @@ pidc_benchmark = readdlm("data/pidc.txt")
 # Compare the edges with the top 5 highest confidences
 # NB CLR differs more for lower-confidence edges, since the original implementation used a threshold
 for i in (1, 2, 3, 4, 5)
-    @test mi_network.edges[i].confidence ≈ mi_benchmark[2*i, 3] atol = eps()
+    @test mi_network.edges[i].confidence ≈ mi_benchmark[2*i, 3] atol = 0.0001
     println("MI network inference $i passed")
-    @test clr_network.edges[i].confidence ≈ clr_benchmark[2*i, 3] atol = eps()
+    @test clr_network.edges[i].confidence ≈ clr_benchmark[2*i, 3] atol = 0.0001
     println("CLR network inference $i passed")
-    @test puc_network.edges[i].confidence ≈ puc_benchmark[2*i, 3] atol = eps()
+    @test puc_network.edges[i].confidence ≈ puc_benchmark[2*i, 3] atol = 0.0001
     println("PUC network inference $i passed")
-    @test pidc_network.edges[i].confidence ≈ pidc_benchmark[2*i, 3] atol = eps()
+    @test pidc_network.edges[i].confidence ≈ pidc_benchmark[2*i, 3] atol = 0.0001
     println("PIDC network inference $i passed")
 end
