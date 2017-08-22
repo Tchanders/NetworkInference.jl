@@ -63,27 +63,27 @@ You can get the network as an edge list:
 
 The following keyword arguments can be passed in to `infer_network`:
 
-**delim** (Union{Char,Bool}) Column delimiter
+**delim** (`Union{Char,Bool}`) Column delimiter
 * `false` (default) Delimiter is whitespace
 
-**discretizer** (String) Method for discretizing
+**discretizer** (`String`) Method for discretizing
 * `"bayesian_blocks"` (default) Adaptive discretizer with varibale number of bins
 * `"uniform_width"` Use this if Bayesian blocks fails, or if constant number of bins is required
 * `"uniform_count"`
 
-**estimator** (String) Estimator for estimating the probability distribution
+**estimator** (`String`) Estimator for estimating the probability distribution
 * `"maximum_likelihood"` (default) Highly recommended for PUC and PIDC. (See inline comments for more information.)
 * `"dirichlet"`
 * `"shrinkage"`
 
-**number_of_bins** (Integer)
+**number_of_bins** (`Integer`)
 * `10` (default)
-This is only for use with the uniform width discretizer; it will be ignored by Bayesian blocks
+(This will be ignored when using Bayesian blocks discretization)
 
-**base** (Number) Base of the logarithm, i.e. the units for entropy
+**base** (`Number`) Base of the logarithm, i.e. the units for entropy
 * `2` (default)
 
-**out_file** (String) Path to the output network file
+**out_file** (`String`) Path to the output network file
 * `""` (default) No file will be written
 
 NB **discretizer** and **estimator** defaults are explained in http://biorxiv.org/content/early/2017/04/26/082099
