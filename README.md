@@ -19,7 +19,7 @@ Some things to note:
 	* in the `Edge` type, the order of the genes is arbitrary
 	* when a network is written to file, edges are written in both directions, becuase downstream analyses sometimes require this
 	* `infer_network` returns an edge list where the edges are only written in one (arbitrary) direction, to save space
-* Inferred networks consist of all possible pairs of genes, and an edge score for each pair. See also [Scope](scope).
+* Inferred networks consist of all possible pairs of genes, and an edge score for each pair. See also [Scope](#scope).
 
 ## Installation
 
@@ -33,7 +33,7 @@ Given a data file and an inference algorithm, you can infer a network with a sin
 
 `infer_network(<path to data file>, PIDCNetworkInference())`
 
-This will return an edge list (of type `Array{Tuple{String,String,Float64},1}`). You can also write the inferred network to file, using the `out_file` keyword argument. See also [Options](options).
+This will return an edge list (of type `Array{Tuple{String,String,Float64},1}`). You can also write the inferred network to file, using the `out_file` keyword argument. See also [Options](#options).
 
 ### Multiple steps
 
@@ -42,8 +42,8 @@ First make an array of `Gene`s from your data:
 `genes = get_genes(<path to data file>)`
 
 Currently the package assumes the file is of the format:
-line 1: headers (these are discarded for now)
-other lines: GeneName value1 value2 value3 ...
+* line 1: headers (these are discarded for now)
+* other lines: GeneName value1 value2 value3 ...
 
 Then infer a network:
 
