@@ -21,12 +21,14 @@ get_puc(::PIDCNetworkInference) = true
 get_confidence(edge::Edge) = edge.confidence
 
 function get_joint_probabilities(gene1, gene2, estimator)
+
     frequencies = get_frequencies_from_bin_ids(
         gene1.discretized_values,
         gene2.discretized_values,
         gene1.number_of_bins,
         gene2.number_of_bins
     )
+
     probabilities = get_probabilities(estimator, frequencies)
     # probabilities is already property of a gene, but doing this gets correct array shapes.
     # Also, for MI and CLR, it means that we don't assume that the marginal probabilities for
@@ -35,7 +37,9 @@ function get_joint_probabilities(gene1, gene2, estimator)
     # because we do make that assumption for 3-gene joint distributions, in get_puc.)
     probabilities1 = sum(probabilities, 2)
     probabilities2 = sum(probabilities, 1)
+
     return (probabilities, probabilities1, probabilities2)
+
 end
 
 function get_mi_scores(genes, number_of_genes, estimator, base)
@@ -48,11 +52,13 @@ function get_mi_scores(genes, number_of_genes, estimator, base)
     end
 
     mi_scores = SharedArray{Float64}(number_of_genes, number_of_genes)
+
     @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             get_mi(genes[i], genes[j], i, j, base, mi_scores)
         end
     end
+
     return mi_scores
 
 end
@@ -93,11 +99,13 @@ function get_puc_scores(genes, number_of_genes, estimator, base)
 
     gene_pairs = Array{GenePair}(number_of_genes, number_of_genes)
     puc_scores = SharedArray{Float64}(number_of_genes, number_of_genes)
+
     for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             get_gene_pairs(genes[i], genes[j], i, j, base)
         end
     end
+
     @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             for k in j+1 : number_of_genes
@@ -107,6 +115,7 @@ function get_puc_scores(genes, number_of_genes, estimator, base)
             end
         end
     end
+
     return puc_scores
 
 end
@@ -127,12 +136,14 @@ function get_confidences(inference, scores, number_of_genes, genes)
             get_clr_confidence(i, j, score, scores_i, scores_j, confidences)
         end
     end
+
     function get_confidence(::CLRNetworkInference, i, j, scores, confidences, genes)
         score = scores[i, j]
         scores_i = vcat(scores[1:i-1, i], scores[i+1:end, i])
         scores_j = vcat(scores[1:j-1, j], scores[j+1:end, j])
         get_clr_confidence(i, j, score, scores_i, scores_j, confidences)
     end
+
     function get_clr_confidence(i, j, score, scores_i, scores_j, confidences)
         confidences[i, j] = sqrt(
             (var(scores_i) == 0 ? 0 : (score - mean(scores_i))^2 / var(scores_i)) +
@@ -141,13 +152,20 @@ function get_confidences(inference, scores, number_of_genes, genes)
     end
 
     confidences = SharedArray{Float64}(number_of_genes, number_of_genes)
+
     @sync @parallel for i in 1 : number_of_genes
         for j in i+1 : number_of_genes
             get_confidence(inference, i, j, scores, confidences, genes)
         end
     end
+
     return confidences
 
+end
+
+immutable NetworkAnalysis
+    genes::Array{Gene}
+    edges::Array{Edge} # All possible edges, in descending order of confidence
 end
 
 # The maximum likelihood estimator is recommended for PUC and PIDC, because speedups
@@ -159,7 +177,7 @@ function NetworkAnalysis(inference::AbstractNetworkInference, genes::Array{Gene}
 
     # Constants and containers
     number_of_genes = length(genes)
-    edges = Array{Edge}(binomial(number_of_genes, base))
+    edges = Array{Edge}(binomial(number_of_genes, 2))
 
     # Get the raw scores
     if get_puc(inference)

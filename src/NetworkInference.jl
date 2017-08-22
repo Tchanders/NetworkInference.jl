@@ -7,18 +7,21 @@ export
     # Common types and functions
     Gene,
     Edge,
-    Network,
     NetworkAnalysis,
-    get_genes,
-    write_network_file,
     # Network inference algorithms
     AbstractNetworkInference,
     MINetworkInference,
     CLRNetworkInference,
     PUCNetworkInference,
-    PIDCNetworkInference
+    PIDCNetworkInference,
+    # Functions for inferring networks
+    get_genes,
+    write_network_file,
+    get_edge_list,
+    infer_network
 
 include("common.jl")
 include("network_inference.jl")
+include("infer_network.jl")
 
 end # module
