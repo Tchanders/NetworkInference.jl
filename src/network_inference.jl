@@ -145,9 +145,11 @@ function get_confidences(inference, scores, number_of_genes, genes)
     end
 
     function get_clr_confidence(i, j, score, scores_i, scores_j, confidences)
+        difference_i = score - mean(scores_i)
+        difference_j = score - mean(scores_j)
         confidences[i, j] = sqrt(
-            (var(scores_i) == 0 ? 0 : (score - mean(scores_i))^2 / var(scores_i)) +
-            (var(scores_j) == 0 ? 0 : (score - mean(scores_j))^2 / var(scores_j))
+            (var(scores_i) == 0 || difference_i < 0 ? 0 : difference_i^2 / var(scores_i)) +
+            (var(scores_j) == 0 || difference_j < 0 ? 0 : difference_j^2 / var(scores_j))
         )
     end
 
