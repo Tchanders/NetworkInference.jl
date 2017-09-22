@@ -1,1 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        enabled: yes
+        target: 80%
+    patch:
+      default:
+        enabled: yes
+        target: 80%
 comment: false
