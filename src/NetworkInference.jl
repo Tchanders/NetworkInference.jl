@@ -17,7 +17,7 @@ export
     # Functions for inferring networks
     get_nodes,
     write_network_file,
-    get_edge_list,
+    get_adjacency_matrix,
     infer_network
 
 include("common.jl")
