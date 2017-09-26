@@ -3,20 +3,17 @@
 [![Build Status](https://travis-ci.org/Tchanders/NetworkInference.jl.svg?branch=master)](https://travis-ci.org/Tchanders/NetworkInference.jl)
 [![codecov.io](http://codecov.io/github/Tchanders/NetworkInference.jl/coverage.svg?branch=master)](http://codecov.io/github/Tchanders/NetworkInference.jl?branch=master)
 
-NB This package is still under development and could change significantly.
-
 ## Description
 
-NetworkInference is a package for inferring (undirected) networks, given a set of measurements for each node.
+NetworkInference is a package for inferring (undirected) networks, given a set of measurements for each node. The main output is the `InferredNetwork` type, which represents a fully connected, weighted network, where an edge's weight indicates the relative confidence of that edge existing in the true network. See also [Scope](#scope).
 
 Some things to note:
-* The package was originally written for inferring biological networks using gene expression data, hence type names such as `Gene` and the use of "network" instead of "graph". However, these methods could be applied to other types of data.
+* The package was originally written for inferring biological networks using gene expression data, hence the use of "network" instead of "graph". However, these methods could be applied to other types of data.
 * Four network inference algorithms are currently implemented (MI, CLR, PUC and PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
 * Networks are assumed to be __undirected__, since all the algorithms included so far infer undirected networks. Hence:
-	* in the `Edge` type, the order of the genes is arbitrary
+	* in the `Edge` type, the order of the nodes is arbitrary
 	* when a network is written to file, edges are written in both directions, becuase downstream analyses sometimes require this
-	* `infer_network` returns an edge list where the edges are only written in one (arbitrary) direction, to save space
-* Inferred networks consist of all possible pairs of genes, and an edge score for each pair. See also [Scope](#scope).
+	* the `InferredNetwork` type contains a list of edges, with one edge for each pair of genes, in which the order of the genes is arbitrary
 
 ## Installation
 
@@ -30,31 +27,31 @@ Given a data file and an inference algorithm, you can infer a network with a sin
 
 `infer_network(<path to data file>, PIDCNetworkInference())`
 
-This will return an edge list (of type `Array{Tuple{String,String,Float64},1}`). You can also write the inferred network to file, using the `out_file` keyword argument. See also [Options](#options).
+This will return an `InferredNetwork` type. You can also write the inferred network to file, using the `out_file_path` keyword argument. See also [Options](#options).
 
 ### Multiple steps
 
-First make an array of `Gene`s from your data:
+First make an array of `Node`s from your data:
 
-`genes = get_genes(<path to data file>)`
+`nodes = get_nodes(<path to data file>)`
 
 Currently the package assumes the file is of the format:
 * line 1: headers (these are discarded for now)
-* other lines: GeneName value1 value2 value3 ...
+* other lines: NodeLabel value1 value2 value3 ...
 
 Then infer a network:
 
-`network_analysis = NetworkAnalysis(PIDCNetworkInference(), genes)`
+`inferred_network = InferredNetwork(PIDCNetworkInference(), nodes)`
 
-A `NetworkAnalysis` has an array of genes and an array of edges between all possible gene pairs (sorted in descending order of edge score, a.k.a. confidence).
+An `InferredNetwork` has an array of nodes and an array of edges between all possible node pairs (sorted in descending order of edge weight, i.e. confidence of the edge existing in the true network).
 
 You can write the network to file:
 
-`write_network_file(<path to output file>, network_analysis)`
+`write_network_file(<path to output file>, inferred_network)`
 
 You can get the network as an edge list:
 
-`get_edge_list(network_analysis)`
+`get_edge_list(inferred_network)`
 
 ## Options
 
@@ -83,11 +80,13 @@ The following keyword arguments can be passed in to `infer_network`:
 **out_file** (`String`) Path to the output network file
 * `""` (default) No file will be written
 
-NB **discretizer** and **estimator** defaults are explained in http://biorxiv.org/content/early/2017/04/26/082099
+Defaults for **discretizer** and **estimator** are explained in http://biorxiv.org/content/early/2017/04/26/082099
 
 ## Scope
 
-This package is not designed for analysing networks/graphs or calculating network/graph metrics. In order to do such analyses, another package should be used (e.g. [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl)). Of course, the edge list or the `NetworkAnalysis` will need to be parsed into the appropriate data structure first.
+This package is not designed for analysing networks/graphs or calculating network/graph metrics. In order to do such analyses, another package should be used (e.g. [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl)). Of course, the edge list or the `InferredNetwork` will need to be parsed into the appropriate data structure first.
+
+Note that the `InferredNetwork` type contains a list of every possible edge, and the confidence of each edge existing in the true network. For analysing the properties of an inferred network, you may first want to define a partially connected, unweighted network by classifying each edge as "in the network" or "not in the network", based on the confidences. The simplest ways to do this are either to decide that the top x percent of edges are "in the network", or to define a threshold confidence, above which edges are "in the network". Thresholding is currently beyond the scope of this package.
 
 ## Contributing
 

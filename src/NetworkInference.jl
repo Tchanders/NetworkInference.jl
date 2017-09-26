@@ -4,10 +4,10 @@ using InformationMeasures
 using Distributions
 
 export
-    # Common types and functions
-    Gene,
+    # Common types
+    Node,
     Edge,
-    NetworkAnalysis,
+    InferredNetwork,
     # Network inference algorithms
     AbstractNetworkInference,
     MINetworkInference,
@@ -15,7 +15,7 @@ export
     PUCNetworkInference,
     PIDCNetworkInference,
     # Functions for inferring networks
-    get_genes,
+    get_nodes,
     write_network_file,
     get_edge_list,
     infer_network
