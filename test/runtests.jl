@@ -6,7 +6,8 @@ using Base.Test
 # Schaffter T, Marbach D, and Floreano D. Bioinformatics, 27(16):2263-70, 2011.
 
 println("Getting nodes...")
-data_file_path = "data/yeast1_10_data.txt"
+data_path = joinpath(dirname(@__FILE__), "data")
+data_file_path = joinpath(data_path, "yeast1_10_data.txt")
 nodes = get_nodes(data_file_path)
 
 println("Inferring networks...")
@@ -19,10 +20,10 @@ pidc_network = InferredNetwork(PIDCNetworkInference(), nodes)
 # inferred using scripts based on InformationMeasures.jl and CLR was inferred using MINET:
 # https://bioconductor.org/packages/release/bioc/html/minet.html
 
-mi_benchmark = readdlm("data/mi.txt")
-clr_benchmark = readdlm("data/clr.txt")
-puc_benchmark = readdlm("data/puc.txt")
-pidc_benchmark = readdlm("data/pidc.txt")
+mi_benchmark = readdlm(joinpath(data_path, "mi.txt"))
+clr_benchmark = readdlm(joinpath(data_path, "clr.txt"))
+puc_benchmark = readdlm(joinpath(data_path, "puc.txt"))
+pidc_benchmark = readdlm(joinpath(data_path, "pidc.txt"))
 
 # Compare a few selected edges throughout the inferred network
 for i in (1, 5, 10, 20, 40)
