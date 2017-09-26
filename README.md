@@ -77,16 +77,22 @@ The following keyword arguments can be passed in to `infer_network`:
 **base** (`Number`) Base of the logarithm, i.e. the units for entropy
 * `2` (default)
 
-**out_file** (`String`) Path to the output network file
+**out_file_path** (`String`) Path to the output network file
 * `""` (default) No file will be written
 
 Defaults for **discretizer** and **estimator** are explained in http://biorxiv.org/content/early/2017/04/26/082099
 
 ## Scope
 
-This package is not designed for analysing networks/graphs or calculating network/graph metrics. In order to do such analyses, another package should be used (e.g. [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl)). Of course, the edge list or the `InferredNetwork` will need to be parsed into the appropriate data structure first.
+This package is not designed for analysing networks/graphs or calculating network/graph metrics. In order to do such analyses, another package should be used (e.g. [LightGraphs](https://github.com/JuliaGraphs/LightGraphs.jl)). Of course, the edge list or the `InferredNetwork` will need to be parsed into the appropriate data structure first; the method `get_adjacency_matrix` may help with this.
 
-Note that the `InferredNetwork` type contains a list of every possible edge, and the confidence of each edge existing in the true network. For analysing the properties of an inferred network, you may first want to define a partially connected, unweighted network by classifying each edge as "in the network" or "not in the network", based on the confidences. The simplest ways to do this are either to decide that the top x percent of edges are "in the network", or to define a threshold confidence, above which edges are "in the network". Thresholding is currently beyond the scope of this package.
+Note that the `InferredNetwork` type contains a list of every possible edge, and the confidence of each edge existing in the true network. For analysing the properties of an inferred network, you may first want to define a partially connected, unweighted network by classifying each edge as "in the network" or "not in the network", based on the confidences. The simplest ways to do this are either to decide that the top x percent of edges are "in the network", or to define a threshold confidence, above which edges are "in the network".
+
+You can pass a threshold into `get_adjacency_matrix` to get the adjacency matrix of a thresholded network (as well as dictionaries to map the node labels to their numerical IDs within the matrix, and vice versa):
+
+`get_adjacency_matrix(inferred_network, 0.1) # Keeps top 10% edges with the largest weights`
+
+`get_adjacency_matrix(inferred_network, 0.1, absolute = true) # Keeps all edges with weights >= 0.1`
 
 ## Contributing
 

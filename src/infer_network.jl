@@ -57,16 +57,38 @@ function write_network_file(file_path::String, inferred_network::InferredNetwork
 
 end
 
-# Gets an edge list array from an InferredNetwork object.
-function get_edge_list(inferred_network::InferredNetwork)
-    edge_list = Tuple{String,String,Float64}[]
+# Gets an adjacency matrix given an InferredNetwork and a threshold.
+#
+# Keyword arguments:
+# - absolute: interpret threshold as an absolute confidence score. If false,
+# threshold will be interpreted as the percentage of edges to keep.
+function get_adjacency_matrix(inferred_network::InferredNetwork, threshold = 1.0; absolute = false)
 
-    for edge in inferred_network.edges
-        nodes = edge.nodes
-        push!(edge_list, (nodes[1].label, nodes[2].label, edge.weight))
+    number_of_nodes = length(inferred_network.nodes)
+    adjacency_matrix = zeros(Bool, (number_of_nodes, number_of_nodes))
+
+    labels_to_ids = Dict{String,Int}()
+    ids_to_labels = Dict{Int,String}()
+    i = 1
+    for node in inferred_network.nodes
+        labels_to_ids[node.label] = i
+        ids_to_labels[i] = node.label
+        i += 1
     end
 
-    return edge_list
+    number_of_edges = absolute ?
+        findfirst(x -> x.weight < threshold, inferred_network.edges) - 1 :
+        Int(round(length(inferred_network.edges) * threshold))
+
+    for edge in inferred_network.edges[1 : number_of_edges]
+        node1 = labels_to_ids[edge.nodes[1].label]
+        node2 = labels_to_ids[edge.nodes[2].label]
+        adjacency_matrix[node1, node2] = true
+        adjacency_matrix[node2, node1] = true
+    end
+
+    return adjacency_matrix, labels_to_ids, ids_to_labels
+
 end
 
 # Infers a network, given a data file and a network inference algorithm. It
