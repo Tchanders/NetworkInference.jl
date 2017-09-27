@@ -1,10 +1,14 @@
 # Basic types for inferring a network
 
-# Node type with metadata:
-# - label: unique identifying label
-# - binned_values: data values discretized into bins
-# - number_of_bins: no. bins the data were discretized into
-# - probabilities: probability distribution across the bins
+"""
+Node with metadata
+
+Fields:
+* `label`: unique identifying label
+* `binned_values`: data values discretized into bins
+* `number_of_bins`: no. bins the data were discretized into
+* `probabilities`: probability distribution across the bins
+"""
 struct Node
     label::String
     binned_values::Array{Int64}
@@ -41,12 +45,16 @@ struct NodePair
     si::Array{Float64}
 end
 
-# Edge type, undirected:
-# - nodes: the two nodes, in an arbitrary order
-# - weight: weight indicating confidence of edge existing in the true network
-# Weights are used to rank the edges, and different algorithms may have a
-# different scale. The relative weights within one inferred network are
-# therefore more meaningful than the absolute weight out of context.
+"""
+Undirected edge
+
+Fields:
+* `nodes`: the two nodes, in an arbitrary order
+* `weight`: weight indicating confidence of edge existing in the true network
+Weights are used to rank the edges, and different algorithms may have a
+different scale. The relative weights within one inferred network are
+therefore more meaningful than the absolute weight out of context.
+"""
 struct Edge
     nodes::Array{Node}
     weight::Float64

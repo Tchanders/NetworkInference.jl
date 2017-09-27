@@ -173,11 +173,15 @@ function get_weights(inference, scores, number_of_nodes, nodes)
 
 end
 
-# InferredNetwork type. Represents a weighted, fully connected network, where an
-# edges's weight indicates the relative confidence of that edge existing in the true
-# network.
-# - nodes: array of all the nodes, in an arbitrary order
-# - edges: array of all the edges, in descending order of weight
+"""
+InferredNetwork type. Represents a weighted, fully connected network, where an
+edges's weight indicates the relative confidence of that edge existing in the true
+network.
+
+Fields:
+* `nodes`: array of all the nodes, in an arbitrary order
+* `edges`: array of all the edges, in descending order of weight
+"""
 struct InferredNetwork
     nodes::Array{Node}
     edges::Array{Edge}
