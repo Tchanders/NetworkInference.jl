@@ -17,7 +17,7 @@ Some things to note:
 
 ## Installation
 
-`Pkg.clone("git@github.com:Tchanders/NetworkInference.jl.git")`
+`Pkg.add("NetworkInference")`
 
 ## Basic usage
 
