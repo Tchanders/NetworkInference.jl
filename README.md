@@ -9,7 +9,7 @@ NetworkInference is a package for inferring (undirected) networks, given a set o
 
 Some things to note:
 * The package was originally written for inferring biological networks using gene expression data, hence the use of "network" instead of "graph". However, these methods could be applied to other types of data.
-* Four network inference algorithms are currently implemented (MI, CLR, PUC and PIDC, explained in http://biorxiv.org/content/early/2017/04/26/082099), but we plan to include more.
+* Four network inference algorithms are currently implemented (MI, CLR, PUC and PIDC, explained in [[1]](#references)), but we plan to include more.
 * Networks are assumed to be __undirected__, since all the algorithms included so far infer undirected networks. Hence:
 	* in the `Edge` type, the order of the nodes is arbitrary
 	* when a network is written to file, edges are written in both directions, becuase downstream analyses sometimes require this
@@ -80,7 +80,7 @@ The following keyword arguments can be passed in to `infer_network`:
 **out_file_path** (`String`) Path to the output network file
 * `""` (default) No file will be written
 
-Defaults for **discretizer** and **estimator** are explained in http://biorxiv.org/content/early/2017/04/26/082099
+Defaults for **discretizer** and **estimator** are explained in [[1]](#references)
 
 ## Scope
 
@@ -97,3 +97,7 @@ You can pass a threshold into `get_adjacency_matrix` to get the adjacency matrix
 ## Contributing
 
 Bug reports, pull requests and other contributions are welcome!
+
+## References
+
+[1] Chan, Stumpf and Babtie (2017) [Gene Regulatory Network Inference from Single-Cell Data Using Multivariate Information Measures](http://www.cell.com/cell-systems/fulltext/S2405-4712(17)30386-1) Cell Systems
