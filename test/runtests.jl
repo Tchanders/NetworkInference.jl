@@ -54,3 +54,6 @@ for adj_matrix in [adj_matrix_absolute, adj_matrix_percentage]
     @test adj_matrix[labels_to_ids[absent_node2.label], labels_to_ids[absent_node1.label]] === false
 end
 println("get_adjacency_matrix passed")
+
+# These tests will only run if the EmpiricalBayes package exists:
+include("empirical_bayes_glue_tests.jl")
