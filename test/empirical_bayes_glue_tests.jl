@@ -2,7 +2,7 @@ using NetworkInference
 using Base.Test
 
 # Only run tests if the EmpiricalBayes package exists
-if EB_EXISTS
+if NetworkInference.EB_EXISTS
 
 using EmpiricalBayes
 
