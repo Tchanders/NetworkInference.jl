@@ -1,26 +1,26 @@
-# Glue functions for natively using EmpiricalBayes with NetworkInference structures. 
-# Will not load if EmpiricalBayes does not exist. 
+# Glue functions for natively using EmpiricalBayes with NetworkInference structures.
+# Will not load if EmpiricalBayes does not exist.
 
 
-# Check for EmpiricalBayes package 
-try 
-  ver = Pkg.installed("EmpiricalBayes") # Will throw errors if does not exist 
-  using EmpiricalBayes
-  eb_exists = true
-catch 
-  eb_exists = false 
-end  
+# Check for EmpiricalBayes package
+EB_EXISTS = true
+try
+  ver = Pkg.installed("EmpiricalBayes") # Will throw errors if does not exist
+catch
+  EB_EXISTS = false
+end
 
 # Only load if package exists
-if eb_exists
+if EB_EXISTS
 
+import EmpiricalBayes.empirical_bayes # for overloading
 
 """
   to_index(label1::String, label2::String)
 
 Convert any ordering of two strings into a unique tuple for that pair.
 """
-function to_index(label1::String, label2::String)
+function to_index(label1::AbstractString, label2::AbstractString)
   if label1 > label2
     return (label1, label2)
   else
@@ -78,7 +78,7 @@ end
 
 
 """
-  empirical_bayes(network::InferredNetwork, priors::Dict, key_func=to_index, num_bins::Int, proportion_to_keep::Float64=1.0)
+  empirical_bayes(network::InferredNetwork, priors::Dict, key_func=to_index, num_bins, proportion_to_keep=1.0)
 
 Calculate the empirical Bayes posteriors of the input statistics using the priors.
 
@@ -86,26 +86,30 @@ Calculate the empirical Bayes posteriors of the input statistics using the prior
 - `network::InferredNetwork` : network to apply priors to.
 - `priors::Dict` : dictionary of priors such that looking up a pair of nodes
   returns the prior value for the edge between them.
+- `num_bins` : number of uniform width bins to discretize into.
+- `proportion_to_keep=1.0` : Proportion of lowest test statistics to
+   keep when calculating null distribution.
 - `key_func=to_index` : a function mapping an Edge object to a key useable in
    the `priors` dictionary
-- `num_bins::Int` : number of uniform width bins to discretize into.
-- `proportion_to_keep::Float64=1.0` : Proportion of lowest test statistics to
-   keep when calculating null distribution.
 """
-function empirical_bayes(network::InferredNetwork, priors::Dict, key_func=to_index, num_bins::Int, proportion_to_keep::Float64=1.0)
-  edge_list = get_edge_list(network)
+function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, proportion_to_keep=1.0, key_func=to_index)
+  edge_list = network.edges
   test_statistics = [e.weight for e in edge_list]
-  prior_list = [ get(priors, key_func(e.nodes), 0) for e in edge_list]
+  prior_list = [ get(priors, key_func(e.nodes), 0) for e in edge_list ]
 
-  posteriors = empirical_bayes(test_statistics, priors, num_bins, proportion_to_keep)
+  eb_edges = Array{Edge}(length(edge_list))
+
+  posteriors = empirical_bayes(test_statistics, prior_list, num_bins, proportion_to_keep)
 
   for i in 1:length(edge_list)
     nodes = edge_list[i].nodes
-    edge_list[i] = Edge(nodes, posteriors[i])
+    eb_edges[i] = Edge(nodes, posteriors[i])
   end
 
-  return InferredNetwork(network.nodes, edge_list)
+  sort!(eb_edges, rev=true, by=x->x.weight)
+
+  return InferredNetwork(network.nodes, eb_edges)
 end
 
 
-end 
+end
