@@ -94,7 +94,7 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, propo
 
   eb_edges = Array{Edge}(length(edge_list))
 
-  posteriors = empirical_bayes(test_statistics, prior_list, num_bins, proportion_to_keep)
+  posteriors = empirical_bayes(test_statistics, prior_list, num_bins, proportion_to_keep = proportion_to_keep)
 
   for i in 1:length(edge_list)
     nodes = edge_list[i].nodes
@@ -104,6 +104,23 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, propo
   sort!(eb_edges, rev = true, by = x->x.weight)
 
   return InferredNetwork(network.nodes, eb_edges)
+end
+
+"""
+  empirical_bayes(network::InferredNetwork, key_func = to_index, num_bins, proportion_to_keep = 1.0)
+
+Calculate the empirical Bayes posteriors of the input statistics with no priors.
+
+# Arguments
+- `network::InferredNetwork` : network to apply priors to.
+- `num_bins` : number of uniform width bins to discretize into.
+- `proportion_to_keep = 1.0` : Proportion of lowest test statistics to
+   keep when calculating null distribution.
+- `key_func = to_index` : a function mapping an Edge object to a key useable in
+   the `priors` dictionary
+"""
+function empirical_bayes(network::InferredNetwork, num_bins, proportion_to_keep = 1.0, key_func = to_index)
+  return empirical_bayes(network, Dict(), num_bins, proportion_to_keep, key_func)
 end
 
 end
