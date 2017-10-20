@@ -2,7 +2,7 @@ using NetworkInference
 using Base.Test
 
 # Only run tests if the EmpiricalBayes package exists
-if EB_EXISTS
+if NetworkInference.EB_EXISTS
 
 using EmpiricalBayes
 
@@ -22,7 +22,6 @@ n2 = Node("bbb", [], 0, [])
 @test to_index([n1, n2]) == to_index([n2, n1])
 @test to_index([n1, n2]) == ("bbb", "aaa")
 
-
 # Test the make_priors function
 prior_path = joinpath(data_folder_path, "test_priors.txt")
 reference_priors = Dict( [ (("bbb", "aaa"), 1) ,
@@ -30,8 +29,6 @@ reference_priors = Dict( [ (("bbb", "aaa"), 1) ,
                      (("ccc", "bbb"), 1)
                    ])
 @test make_priors(prior_path) == reference_priors
-
-
 
 # Test the empirical_bayes function
 println("inferring test empirical bayes network...")
@@ -54,10 +51,7 @@ benchmark_stats = convert(Array{Float64}, mi_benchmark[:, 3])
 benchmark_priors = convert(Array{Float64}, mi_priors[:, 3])
 ref_weights = empirical_bayes(benchmark_stats, benchmark_priors, 5)
 
-@test eb_weights ≈ sort(ref_weights, rev=true) atol=0.0001
-
-
-
+@test eb_weights ≈ sort(ref_weights, rev = true) atol = 0.0001
 
 println("empirical bayes glue tests passed")
 end
