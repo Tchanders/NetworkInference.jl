@@ -23,5 +23,15 @@ export
 include("common.jl")
 include("network_inference.jl")
 include("infer_network.jl")
+include("empirical_bayes_glue.jl")
+
+# Optional exports
+if EB_EXISTS
+export
+    # Empirical Bayes glue functions
+    to_index,
+    make_priors,
+    empirical_bayes
+end
 
 end # module
