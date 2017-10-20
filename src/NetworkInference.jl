@@ -28,8 +28,6 @@ include("empirical_bayes_glue.jl")
 # Optional exports
 if EB_EXISTS
 export
-    # Empirical Bayes existence flag
-    EB_EXISTS,
     # Empirical Bayes glue functions
     to_index,
     make_priors,
