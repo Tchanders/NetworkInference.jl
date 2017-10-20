@@ -4,8 +4,5 @@ coverage:
       default:
         enabled: yes
         target: 80%
-    patch:
-      default:
-        enabled: yes
-        target: 80%
+    patch: false
 comment: false
