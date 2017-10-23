@@ -29,6 +29,21 @@ reference_priors = Dict( [ (("bbb", "aaa"), 1) ,
                      (("ccc", "bbb"), 1)
                    ])
 @test make_priors(prior_path) == reference_priors
+reference_priors = Dict( [ (("ccc", "aaa"), 0) ,
+                     (("ccc", "bbb"), 1)
+                   ])
+@test make_priors(prior_path, 1.0, 2) == reference_priors
+reference_priors = Dict( [ (("bbb", "aaa"), 2) ,
+                     (("ccc", "aaa"), 0) ,
+                     (("ccc", "bbb"), 2)
+                   ])
+@test make_priors(prior_path, 2.0) == reference_priors
+@test make_priors([prior_path, prior_path]) == reference_priors
+@test make_priors([prior_path, prior_path], [1.5, 0.5]) == reference_priors
+reference_priors = Dict( [ (("ccc", "aaa"), 0) ,
+                     (("ccc", "bbb"), 2)
+                   ])
+@test make_priors([prior_path, prior_path], [1.5, 0.5], 2) == reference_priors
 
 # Test the empirical_bayes function
 println("Inferring test empirical Bayes networks...")
@@ -44,7 +59,7 @@ yeast_test_data = joinpath(data_folder_path, "yeast1_10_data.txt")
 nodes = get_nodes(yeast_test_data)
 mi_network = InferredNetwork(MINetworkInference(), nodes)
 
-eb_network = empirical_bayes(mi_network, prior_dict, 5)
+eb_network = empirical_bayes(mi_network, prior_dict, 5, tail = :two)
 eb_weights = [e.weight for e in eb_network.edges]
 
 benchmark_stats = convert(Array{Float64}, mi_benchmark[:, 3])
@@ -55,7 +70,7 @@ ref_weights = empirical_bayes(benchmark_stats, benchmark_priors, 5)
 
 # Test the empirical_bayes function with no priors
 println("Inferring test empirical Bayes networks with no priors...")
-eb_no_prior_network = empirical_bayes(mi_network, 5)
+eb_no_prior_network = empirical_bayes(mi_network, 5, tail = :two)
 eb_no_prior_weights = [e.weight for e in eb_no_prior_network.edges]
 
 ref_no_prior_weights = empirical_bayes(benchmark_stats, 5)
