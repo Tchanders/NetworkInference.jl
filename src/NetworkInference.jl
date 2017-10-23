@@ -17,6 +17,7 @@ export
     # Functions for inferring networks
     get_nodes,
     write_network_file,
+    read_network_file,
     get_adjacency_matrix,
     infer_network
 
