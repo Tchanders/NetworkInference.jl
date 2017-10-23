@@ -6,7 +6,7 @@ if NetworkInference.EB_EXISTS
 
 using EmpiricalBayes
 
-println("testing empirical bayes glue functions...")
+println("Testing empirical Bayes glue functions...")
 
 data_folder_path = joinpath(dirname(@__FILE__), "data")
 
@@ -31,7 +31,7 @@ reference_priors = Dict( [ (("bbb", "aaa"), 1) ,
 @test make_priors(prior_path) == reference_priors
 
 # Test the empirical_bayes function
-println("inferring test empirical bayes networks...")
+println("Inferring test empirical Bayes networks...")
 mi_benchmark = readdlm(joinpath(data_folder_path, "mi.txt"))
 mi_benchmark = mi_benchmark[1:2:end, :] # skip repeated edges
 
@@ -54,7 +54,7 @@ ref_weights = empirical_bayes(benchmark_stats, benchmark_priors, 5)
 @test eb_weights ≈ sort(ref_weights, rev = true) atol = 0.0001
 
 # Test the empirical_bayes function with no priors
-println("inferring test empirical bayes networks with no priors...")
+println("Inferring test empirical Bayes networks with no priors...")
 eb_no_prior_network = empirical_bayes(mi_network, 5)
 eb_no_prior_weights = [e.weight for e in eb_no_prior_network.edges]
 
@@ -62,5 +62,6 @@ ref_no_prior_weights = empirical_bayes(benchmark_stats, 5)
 
 @test eb_no_prior_weights ≈ sort(ref_no_prior_weights, rev = true) atol = 0.0001
 
-println("empirical bayes glue tests passed")
+println("Empirical Bayes glue tests passed")
+
 end
