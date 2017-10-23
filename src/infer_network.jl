@@ -77,6 +77,39 @@ function write_network_file(file_path::String, inferred_network::InferredNetwork
 end
 
 """
+    read_network_file(file_path::AbstractString)
+
+Reads a network file and creates an InferredNetwork type. Assumes that the input
+is such that each line contains an edge and each edge is written in both
+directions with the same weight:
+
+...
+
+LabelX   LabelY  WeightXY
+
+LabelY   LabelX  WeightXY
+
+...
+"""
+function read_network_file(file_path::AbstractString)
+    mat = readdlm(file_path)[1:2:end, :]
+    edges = []
+    nodes = Set()
+
+    for i in 1:size(mat,1)
+        n1_label, n2_label, weight = mat[i, :]
+        n1 = Node(n1_label, [], 0, [])
+        n2 = Node(n2_label, [], 0, [])
+        new_edge = Edge([n1, n2], weight)
+        push!(edges, new_edge)
+        push!(nodes, n1_label, n2_label)
+    end
+
+    nodes = [Node(n, [], 0, []) for n in nodes]
+    return InferredNetwork(nodes, edges)
+end
+
+"""
     get_adjacency_matrix(inferred_network::InferredNetwork, threshold = 1.0; <keyword arguments>)
 
 Gets an adjacency matrix given an InferredNetwork and a threshold.
