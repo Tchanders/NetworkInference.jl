@@ -61,21 +61,21 @@ yeast_test_data = joinpath(data_folder_path, "yeast1_10_data.txt")
 nodes = get_nodes(yeast_test_data)
 mi_network = InferredNetwork(MINetworkInference(), nodes)
 
-eb_network = empirical_bayes(mi_network, prior_dict, 5, tail = :two)
+eb_network = empirical_bayes(mi_network, prior_dict, 5, :Gamma, tail = :two)
 eb_weights = [e.weight for e in eb_network.edges]
 
 benchmark_stats = convert(Array{Float64}, mi_benchmark[:, 3])
 benchmark_priors = convert(Array{Float64}, mi_priors[:, 3])
-ref_weights = empirical_bayes(benchmark_stats, benchmark_priors, 5)
+ref_weights = empirical_bayes(benchmark_stats, benchmark_priors, 5, :Gamma)
 
 @test eb_weights ≈ sort(ref_weights, rev = true) atol = 0.0001
 
 # Test the empirical_bayes function with no priors
 println("Inferring test empirical Bayes networks with no priors...")
-eb_no_prior_network = empirical_bayes(mi_network, 5, tail = :two)
+eb_no_prior_network = empirical_bayes(mi_network, 5, :Gamma, tail = :two)
 eb_no_prior_weights = [e.weight for e in eb_no_prior_network.edges]
 
-ref_no_prior_weights = empirical_bayes(benchmark_stats, 5)
+ref_no_prior_weights = empirical_bayes(benchmark_stats, 5, :Gamma)
 
 @test eb_no_prior_weights ≈ sort(ref_no_prior_weights, rev = true) atol = 0.0001
 

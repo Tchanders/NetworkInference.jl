@@ -102,7 +102,7 @@ function make_priors(filepaths::Array{String}, weights = ones(length(filepaths))
 end
 
 """
-    empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, proportion_to_keep = 1.0, key_func = to_index)
+    empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr::Symbol, proportion_to_keep = 1.0, key_func = to_index)
 
 Calculate the empirical Bayes posteriors of the input statistics using the priors.
 
@@ -111,13 +111,14 @@ Calculate the empirical Bayes posteriors of the input statistics using the prior
 * `priors::Dict` : dictionary of priors such that looking up a pair of nodes
   returns the prior value for the edge between them.
 * `num_bins` : number of uniform width bins to discretize into.
+* `distr` : form of the null distribution to be fitted.
 * `proportion_to_keep = 1.0` : Proportion of lowest test statistics to
    keep when calculating null distribution.
 * `key_func = to_index` : a function mapping an Edge object to a key useable in
-   the `priors` dictionary
-* `tail` : Whether the test is two-tailed (:two) or one-tailed (:lower or :upper)
+   the `priors` dictionary.
+* `tail` : Whether the test is two-tailed (:two) or one-tailed (:lower or :upper).
 """
-function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins; proportion_to_keep = 1.0, key_func = to_index,
+function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index,
     tail = :upper)
 
     edge_list = network.edges
@@ -126,7 +127,7 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins; propo
 
     eb_edges = Array{Edge}(length(edge_list))
 
-    posteriors = empirical_bayes(test_statistics, prior_list, num_bins, proportion_to_keep = proportion_to_keep,
+    posteriors = empirical_bayes(test_statistics, prior_list, num_bins, distr, proportion_to_keep = proportion_to_keep,
         tail = tail)
 
     for i in 1:length(edge_list)
@@ -140,21 +141,22 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins; propo
 end
 
 """
-  empirical_bayes(network::InferredNetwork num_bins, proportion_to_keep = 1.0, key_func = to_index)
+  empirical_bayes(network::InferredNetwork num_bins, distr::Symbol, proportion_to_keep = 1.0, key_func = to_index)
 
 Calculate the empirical Bayes posteriors of the input statistics with no priors.
 
 # Arguments
 * `network::InferredNetwork` : network to apply priors to.
 * `num_bins` : number of uniform width bins to discretize into.
-* `proportion_to_keep = 1.0` : Proportion of lowest test statistics to
+* `distr` : form of the null distribution to be fitted.
+* `proportion_to_keep = 1.0` : proportion of lowest test statistics to
    keep when calculating null distribution.
 * `key_func = to_index` : a function mapping an Edge object to a key useable in
-   the `priors` dictionary
-* `tail` : Whether the test is two-tailed (:two) or one-tailed (:lower or :upper)
+   the `priors` dictionary.
+* `tail` : whether the test is two-tailed (:two) or one-tailed (:lower or :upper).
 """
-function empirical_bayes(network::InferredNetwork, num_bins; proportion_to_keep = 1.0, key_func = to_index, tail = :upper)
-    return empirical_bayes(network, Dict(), num_bins, proportion_to_keep = proportion_to_keep, key_func = key_func, tail = tail)
+function empirical_bayes(network::InferredNetwork, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index, tail = :upper)
+    return empirical_bayes(network, Dict(), num_bins, distr, proportion_to_keep = proportion_to_keep, key_func = key_func, tail = tail)
 end
 
 end
