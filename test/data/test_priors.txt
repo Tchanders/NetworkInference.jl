@@ -2,3 +2,5 @@ Gene1	Gene2	Value
 aaa	bbb	1
 aaa	ccc	0
 bbb	ccc	1
+bbb aaa 0
+ccc aaa -1

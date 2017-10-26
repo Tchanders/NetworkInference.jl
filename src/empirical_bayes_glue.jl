@@ -67,7 +67,11 @@ function make_priors(filepath::String, weight = 1.0, skiplines = 1)
     for i in 1:num_priors
         n1, n2, p = prior_mat[i, :]
         index = to_index(n1, n2)
-        prior_dict[index] = p * weight
+        if haskey(prior_dict, index)
+            prior_dict[index] = max(p * weight, prior_dict[index])
+        else
+            prior_dict[index] = p * weight
+        end
     end
 
     return prior_dict

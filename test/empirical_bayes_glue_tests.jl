@@ -30,7 +30,8 @@ reference_priors = Dict( [ (("bbb", "aaa"), 1) ,
                    ])
 @test make_priors(prior_path) == reference_priors
 reference_priors = Dict( [ (("ccc", "aaa"), 0) ,
-                     (("ccc", "bbb"), 1)
+                     (("ccc", "bbb"), 1) ,
+                     (("bbb", "aaa"), 0)
                    ])
 @test make_priors(prior_path, 1.0, 2) == reference_priors
 reference_priors = Dict( [ (("bbb", "aaa"), 2) ,
@@ -41,7 +42,8 @@ reference_priors = Dict( [ (("bbb", "aaa"), 2) ,
 @test make_priors([prior_path, prior_path]) == reference_priors
 @test make_priors([prior_path, prior_path], [1.5, 0.5]) == reference_priors
 reference_priors = Dict( [ (("ccc", "aaa"), 0) ,
-                     (("ccc", "bbb"), 2)
+                     (("ccc", "bbb"), 2) ,
+                     (("bbb", "aaa"), 0)
                    ])
 @test make_priors([prior_path, prior_path], [1.5, 0.5], 2) == reference_priors
 
