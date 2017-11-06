@@ -117,9 +117,10 @@ Calculate the empirical Bayes posteriors of the input statistics using the prior
 * `key_func = to_index` : a function mapping an Edge object to a key useable in
    the `priors` dictionary.
 * `tail` : Whether the test is two-tailed (:two) or one-tailed (:lower or :upper).
+- `w0` : Default constant for the prior calculation
 """
 function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index,
-    tail = :upper)
+    tail = :upper, w0=0)
 
     edge_list = network.edges
     test_statistics = [e.weight for e in edge_list]
@@ -128,12 +129,15 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr
     eb_edges = Array{Edge}(length(edge_list))
 
     posteriors = empirical_bayes(test_statistics, prior_list, num_bins, distr, proportion_to_keep = proportion_to_keep,
-        tail = tail)
+        tail = tail, w0 = w0)
 
     for i in 1:length(edge_list)
         nodes = edge_list[i].nodes
         eb_edges[i] = Edge(nodes, posteriors[i])
     end
+
+    # Remove infinite values
+    eb_edges = filter(x->isfinite(x.weight), eb_edges)
 
     sort!(eb_edges, rev = true, by = x->x.weight)
 
@@ -154,9 +158,10 @@ Calculate the empirical Bayes posteriors of the input statistics with no priors.
 * `key_func = to_index` : a function mapping an Edge object to a key useable in
    the `priors` dictionary.
 * `tail` : whether the test is two-tailed (:two) or one-tailed (:lower or :upper).
+- `w0` : Default constant for the prior calculation
 """
-function empirical_bayes(network::InferredNetwork, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index, tail = :upper)
-    return empirical_bayes(network, Dict(), num_bins, distr, proportion_to_keep = proportion_to_keep, key_func = key_func, tail = tail)
+function empirical_bayes(network::InferredNetwork, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index, tail = :upper, w0 = 0)
+    return empirical_bayes(network, Dict(), num_bins, distr, proportion_to_keep = proportion_to_keep, key_func = key_func, tail = tail, w0 = w0)
 end
 
 end
