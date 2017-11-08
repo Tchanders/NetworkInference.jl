@@ -120,7 +120,7 @@ Calculate the empirical Bayes posteriors of the input statistics using the prior
 - `w0` : Default constant for the prior calculation
 """
 function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index,
-    tail = :upper, w0=0)
+    tail = :upper, w0 = 2.2)
 
     edge_list = network.edges
     test_statistics = [e.weight for e in edge_list]
@@ -160,7 +160,7 @@ Calculate the empirical Bayes posteriors of the input statistics with no priors.
 * `tail` : whether the test is two-tailed (:two) or one-tailed (:lower or :upper).
 - `w0` : Default constant for the prior calculation
 """
-function empirical_bayes(network::InferredNetwork, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index, tail = :upper, w0 = 0)
+function empirical_bayes(network::InferredNetwork, num_bins, distr::Symbol; proportion_to_keep = 1.0, key_func = to_index, tail = :upper, w0 = 2.2)
     return empirical_bayes(network, Dict(), num_bins, distr, proportion_to_keep = proportion_to_keep, key_func = key_func, tail = tail, w0 = w0)
 end
 
