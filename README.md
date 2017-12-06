@@ -21,6 +21,10 @@ Some things to note:
 
 ## Basic usage
 
+First include the package at the start of your script or interactive session:
+
+`using NetworkInference`
+
 ### One step
 
 Given a data file and an inference algorithm, you can infer a network with a single function call:
