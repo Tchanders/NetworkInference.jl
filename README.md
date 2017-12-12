@@ -53,10 +53,6 @@ You can write the network to file:
 
 `write_network_file(<path to output file>, inferred_network)`
 
-You can get the network as an edge list:
-
-`get_edge_list(inferred_network)`
-
 ## Options
 
 The following keyword arguments can be passed in to `infer_network`:
