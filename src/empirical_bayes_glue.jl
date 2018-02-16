@@ -66,6 +66,8 @@ function make_priors(filepath::String, weight = 1.0, skiplines = 1)
     prior_dict = Dict()
     for i in 1:num_priors
         n1, n2, p = prior_mat[i, :]
+        n1 = string(n1)
+        n2 = string(n2)
         index = to_index(n1, n2)
         if haskey(prior_dict, index)
             prior_dict[index] = max(p * weight, prior_dict[index])
