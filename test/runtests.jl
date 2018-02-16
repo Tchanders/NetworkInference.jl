@@ -59,7 +59,7 @@ println("get_adjacency_matrix passed")
 test_network_filepath = joinpath(data_path, "mi.txt")
 read_network = read_network_file(test_network_filepath)
 @test length(read_network.edges) == 45
-reference_nodes = ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"]
+reference_nodes = ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "10"]
 @test Set([x.label for x in read_network.nodes]) == Set(reference_nodes)
 # Compare a few edges
 @test read_network.edges[1].weight ≈ 0.2972651133683284 atol = 0.00001
@@ -69,7 +69,7 @@ reference_nodes = ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"]
 @test read_network.edges[34].weight ≈ 0.02896110920075312 atol = 0.00001
 @test Set([x.label for x in read_network.edges[34].nodes]) == Set(["G2", "G8"])
 @test read_network.edges[35].weight ≈ 0.02848989653696199 atol = 0.00001
-@test Set([x.label for x in read_network.edges[35].nodes]) == Set(["G9", "G10"])
+@test Set([x.label for x in read_network.edges[35].nodes]) == Set(["G9", "10"])
 println("read_network_file passed")
 
 # These tests will only run if the EmpiricalBayes package exists:

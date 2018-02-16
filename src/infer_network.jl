@@ -98,6 +98,8 @@ function read_network_file(file_path::AbstractString)
 
     for i in 1:size(mat,1)
         n1_label, n2_label, weight = mat[i, :]
+        n1_label = string(n1_label)
+        n2_label = string(n2_label)
         n1 = Node(n1_label, [], 0, [])
         n2 = Node(n2_label, [], 0, [])
         new_edge = Edge([n1, n2], weight)
