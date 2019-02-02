@@ -1,5 +1,6 @@
 using NetworkInference
-using Base.Test
+using Test
+using DelimitedFiles
 
 # These tests use a dataset generated from the 10-node Yeast1 network from http://gnw.sourceforge.net/
 # GeneNetWeaver: In silico benchmark generation and performance profiling of network inference methods.

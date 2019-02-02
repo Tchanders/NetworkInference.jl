@@ -1,5 +1,6 @@
 using NetworkInference
-using Base.Test
+using Test
+using DelimitedFiles
 
 # Only run tests if the EmpiricalBayes package exists
 if NetworkInference.EB_EXISTS

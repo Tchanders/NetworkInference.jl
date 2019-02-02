@@ -2,6 +2,10 @@ module NetworkInference
 
 using InformationMeasures
 using Distributions
+using Distributed
+using Pkg
+using DelimitedFiles
+using SharedArrays
 
 export
     # Common types

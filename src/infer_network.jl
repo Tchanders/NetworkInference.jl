@@ -29,7 +29,7 @@ function get_nodes(data_file_path::String; delim::Union{Char,Bool} = false, disc
         lines = readdlm(open(data_file_path), delim; skipstart = 1)
     end
     number_of_nodes = size(lines, 1)
-    nodes = Array{Node}(number_of_nodes)
+    nodes = Array{Node}(undef, number_of_nodes)
 
     for i in 1:number_of_nodes
         nodes[i] = Node(lines[i:i, 1:end], discretizer, estimator, number_of_bins)

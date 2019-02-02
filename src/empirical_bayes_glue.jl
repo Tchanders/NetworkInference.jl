@@ -2,12 +2,7 @@
 # Will not load if EmpiricalBayes does not exist.
 
 # Check for EmpiricalBayes package
-EB_EXISTS = true
-try
-    ver = Pkg.installed("EmpiricalBayes") # Will throw errors if does not exist
-catch
-    EB_EXISTS = false
-end
+EB_EXISTS = in("EmpiricalBayes",keys(Pkg.installed())) ? true : false
 
 # Only load if package exists
 if EB_EXISTS
@@ -128,7 +123,7 @@ function empirical_bayes(network::InferredNetwork, priors::Dict, num_bins, distr
     test_statistics = [e.weight for e in edge_list]
     prior_list = [ get(priors, key_func(e.nodes), 0) for e in edge_list ]
 
-    eb_edges = Array{Edge}(length(edge_list))
+    eb_edges = Array{Edge}(undef, length(edge_list))
 
     posteriors = empirical_bayes(test_statistics, prior_list, num_bins, distr, proportion_to_keep = proportion_to_keep,
         tail = tail, w0 = w0)
