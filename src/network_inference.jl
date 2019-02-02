@@ -40,8 +40,8 @@ function get_joint_probabilities(node1, node2, estimator)
     # a node are always the same, no matter what the second node is, meaning that we can use
     # estimators other than maximum likelihood. (We still can't do this for PUC and PIDC,
     # because we do make that assumption for 3-node joint distributions, in get_puc.)
-    probabilities1 = sum(probabilities, 2)
-    probabilities2 = sum(probabilities, 1)
+    probabilities1 = sum(probabilities, dims = 2)
+    probabilities2 = sum(probabilities, dims = 1)
 
     return (probabilities, probabilities1, probabilities2)
 
@@ -59,7 +59,7 @@ function get_mi_scores(nodes, number_of_nodes, estimator, base)
 
     mi_scores = SharedArray{Float64}(number_of_nodes, number_of_nodes)
 
-    @sync @parallel for i in 1 : number_of_nodes
+    @sync @distributed for i in 1 : number_of_nodes
         for j in i+1 : number_of_nodes
             get_mi(nodes[i], nodes[j], i, j, base, mi_scores)
         end
@@ -104,7 +104,7 @@ function get_puc_scores(nodes, number_of_nodes, estimator, base)
         increment_puc_scores(y, z, source2_target.mi, redundancy, puc_scores)
     end
 
-    node_pairs = Array{NodePair}(number_of_nodes, number_of_nodes)
+    node_pairs = Array{NodePair}(undef, number_of_nodes, number_of_nodes)
     puc_scores = SharedArray{Float64}(number_of_nodes, number_of_nodes)
 
     for i in 1 : number_of_nodes
@@ -113,7 +113,7 @@ function get_puc_scores(nodes, number_of_nodes, estimator, base)
         end
     end
 
-    @sync @parallel for i in 1 : number_of_nodes
+    @sync @distributed for i in 1 : number_of_nodes
         for j in i+1 : number_of_nodes
             for k in j+1 : number_of_nodes
                 get_puc(nodes[k], node_pairs[i, k], node_pairs[j, k], i, j, k, puc_scores)
@@ -163,7 +163,7 @@ function get_weights(inference, scores, number_of_nodes, nodes)
 
     weights = SharedArray{Float64}(number_of_nodes, number_of_nodes)
 
-    @sync @parallel for i in 1 : number_of_nodes
+    @sync @distributed for i in 1 : number_of_nodes
         for j in i+1 : number_of_nodes
             get_weight(inference, i, j, scores, weights, nodes)
         end
@@ -202,7 +202,7 @@ function InferredNetwork(inference::AbstractNetworkInference, nodes::Array{Node}
 
     # Constants and containers
     number_of_nodes = length(nodes)
-    edges = Array{Edge}(binomial(number_of_nodes, 2))
+    edges = Array{Edge}(undef, binomial(number_of_nodes, 2))
 
     # Get the raw scores
     if get_puc(inference)
