@@ -94,6 +94,26 @@ You can pass a threshold into `get_adjacency_matrix` to get the adjacency matrix
 
 `get_adjacency_matrix(inferred_network, 0.1, absolute = true) # Keeps all edges with weights >= 0.1`
 
+## Performance
+
+It may be possible to speed up an analysis, particularly for large datasets, by using [multiple processes](https://docs.julialang.org/en/v1/manual/distributed-computing/).
+
+If multiple processes are available, NetworkInference will distribute the most costly calculations across the processes. (These are the for loops in `get_mi_scores` and `get_puc_scores`.)
+
+**Example**
+
+```
+$ ./julia -p 3
+
+julia> using NetworkInference
+
+julia> infer_network(<path to data file>, PIDCNetworkInference())
+```
+
+This opens the Julia REPL with 3 extra processes (so 4 in total). NetworkInference may then be used as normal; it will handle distributing the calculations.
+
+Note that the performance gain from distributing calculations is offset by communicating between the processes, so for small datasets it is more efficient to use one process. For the same reason, using too many processes will degrade performance, so it is a good idea to do some timing tests with different numbers of processes.
+
 ## Contributing
 
 Bug reports, pull requests and other contributions are welcome!
