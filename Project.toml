@@ -1,9 +1,9 @@
 name = "NetworkInference"
 uuid = "6b44d3db-2bc5-5ac3-b70f-26aa69b1b11b"
-version = "0.1.0"
+version = "0.1.1"
 
 [compat]
-InformationMeasures = "≥ 0.3.0"
+InformationMeasures = "≥ 0.3.1"
 julia = "≥ 1.0.0"
 
 [deps]
