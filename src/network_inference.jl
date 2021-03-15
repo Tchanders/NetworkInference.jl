@@ -88,7 +88,7 @@ function get_puc_scores(nodes, number_of_nodes, estimator, base)
 
     function increment_puc_scores(x, z, mi, redundancy, puc_scores)
         puc_score = (mi - redundancy) / mi
-        puc_score = isfinite(puc_score) ? puc_score : zero(puc_score)
+        puc_score = isfinite(puc_score) && puc_score >= 0 ? puc_score : zero(puc_score)
         puc_scores[x, z] += puc_score
         puc_scores[z, x] += puc_score
     end
